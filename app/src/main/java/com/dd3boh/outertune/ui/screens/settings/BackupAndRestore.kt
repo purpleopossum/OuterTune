@@ -9,6 +9,7 @@
 
 package com.dd3boh.outertune.ui.screens.settings
 
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -36,8 +37,10 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -49,17 +52,31 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.dd3boh.outertune.LocalDatabase
 import com.dd3boh.outertune.LocalPlayerAwareWindowInsets
 import com.dd3boh.outertune.R
 import com.dd3boh.outertune.constants.ScannerMatchCriteria
 import com.dd3boh.outertune.constants.ScannerSensitivityKey
+import com.dd3boh.outertune.db.entities.PlaylistEntity
+import com.dd3boh.outertune.db.entities.PlaylistEntity.Companion.generatePlaylistId
 import com.dd3boh.outertune.db.entities.Song
+import com.dd3boh.outertune.models.ItemsPage
+import com.dd3boh.outertune.models.toMediaMetadata
 import com.dd3boh.outertune.ui.component.IconButton
 import com.dd3boh.outertune.ui.component.PreferenceEntry
 import com.dd3boh.outertune.ui.menu.AddToPlaylistDialog
 import com.dd3boh.outertune.ui.utils.backToMain
 import com.dd3boh.outertune.utils.rememberEnumPreference
+import com.dd3boh.outertune.utils.reportException
 import com.dd3boh.outertune.viewmodels.BackupRestoreViewModel
+import com.zionhuang.innertube.YouTube
+import com.zionhuang.innertube.models.SongItem
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.URLDecoder
+import java.nio.charset.StandardCharsets
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -74,7 +91,9 @@ fun BackupAndRestore(
         key = ScannerSensitivityKey,
         defaultValue = ScannerMatchCriteria.LEVEL_2
     )
-
+    val coroutineScope = rememberCoroutineScope()
+    val database = LocalDatabase.current
+    val viewStateMap = remember { mutableStateMapOf<String, ItemsPage?>() }
     val context = LocalContext.current
     val backupLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/octet-stream")) { uri ->
         if (uri != null) {
@@ -109,6 +128,67 @@ fun BackupAndRestore(
         }
     }
 
+    val importM3uLauncherOnline = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val result = viewModel.prova(context, uri)
+        val pid = generatePlaylistId()
+        importedSongs.clear()
+        importedSongs.addAll(result)
+
+        val playlistEnt = PlaylistEntity(
+            id = pid,
+            name = "prova",
+            browseId = null,
+            bookmarkedAt = LocalDateTime.now(),
+            isEditable = true,
+            isLocal = false // && check that all songs are non-local
+        )
+        database.query {
+            insert(playlistEnt)
+        }
+        importedSongs.forEach{
+            song ->
+                var allArtists = ""
+                song.artists.forEach {
+                    artist ->
+                        allArtists += " ${URLDecoder.decode(artist.name, StandardCharsets.UTF_8.toString())}"
+                }
+                val query = "${song.title} - $allArtists"
+                coroutineScope.launch {
+                    try {
+                        YouTube.search(query, YouTube.SearchFilter.FILTER_SONG)
+                            .onSuccess { result ->
+                                viewStateMap[YouTube.SearchFilter.FILTER_SONG.value] =
+                                    ItemsPage(result.items.distinctBy { it.id }, result.continuation)
+                                val itemsPage = viewStateMap.entries.first()!!.value!!
+                                val firstSong = itemsPage.items[0] as SongItem
+                                val firstSongEnt = firstSong.toMediaMetadata().toSongEntity()
+                                val playlist = database.playlist(playlistEnt.id).first()
+                                val ids = List(1) {firstSong.id}
+                                withContext(Dispatchers.IO) {
+                                    try {
+                                        database.insert(firstSongEnt)
+                                    } catch (e: Exception) {
+                                        Log.v("Exception inserting song in database:", e.toString())
+                                    }
+                                    database.addSongToPlaylist(playlist!!, ids)
+                                }
+                                viewStateMap.clear()
+                            }
+                            .onFailure {
+                                reportException(it)
+                            }
+                    } catch (e: Exception){
+                        Log.v("ERROR", e.toString())
+                    }
+
+                }
+
+        }
+
+
+    }
+
     Column(
         Modifier
             .windowInsetsPadding(LocalPlayerAwareWindowInsets.current)
@@ -138,6 +218,15 @@ fun BackupAndRestore(
                 importM3uLauncher.launch(arrayOf("audio/*"))
             }
         )
+
+        PreferenceEntry(
+            title = {Text(stringResource(R.string.import_online))},
+            icon = { Icon(Icons.AutoMirrored.Rounded.PlaylistAdd, null) },
+            onClick = {
+                importM3uLauncherOnline.launch(arrayOf("audio/*"))
+            }
+        )
+
         AddToPlaylistDialog(
             isVisible = showChoosePlaylistDialog,
             allowSyncing = false,

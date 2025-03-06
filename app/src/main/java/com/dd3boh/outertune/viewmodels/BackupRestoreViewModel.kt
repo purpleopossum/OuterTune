@@ -3,6 +3,7 @@ package com.dd3boh.outertune.viewmodels
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import com.dd3boh.outertune.MainActivity
@@ -161,7 +162,49 @@ class BackupRestoreViewModel @Inject constructor(
         }
         return Triple(songs, rejectedSongs, uri.path?.substringAfterLast('/')?.substringBeforeLast('.') ?: "")
     }
+    fun prova(
+        context: Context,
+        uri: Uri,
+    ): ArrayList<Song> {
+        val songs = ArrayList<Song>()
 
+        runCatching {
+            context.applicationContext.contentResolver.openInputStream(uri)?.use { stream ->
+                val lines = stream.readLines()
+                if (lines.first().startsWith("#EXTM3U")) {
+                    lines.forEachIndexed { index, rawLine ->
+                        if (rawLine.startsWith("#EXTINF:")) {
+                            // maybe later write this to be more efficient
+                            val artists =
+                                rawLine.substringAfter("#EXTINF:").substringAfter(',').substringBefore(" - ").split(';')
+                            val title = rawLine.substringAfter("#EXTINF:").substringAfter(',').substringAfter(" - ")
+
+                            val mockSong = Song(
+                                song = SongEntity(
+                                    id = "",
+                                    title = title,
+                                    isLocal = false,
+                                    localPath = if (index + 1 < lines.size) lines[index + 1] else ""
+                                ),
+                                artists = artists.map { ArtistEntity("", it) },
+                            )
+                            songs.add(mockSong)
+
+                            }
+                        }
+                    }
+                }
+            }
+
+        if (songs.isEmpty()) {
+            Toast.makeText(
+                context,
+                "No songs found. Invalid file, or perhaps no song matches were found.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        return songs
+    }
     /**
      * Read a file to a string
      */
