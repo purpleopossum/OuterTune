@@ -45,11 +45,8 @@ import com.dd3boh.outertune.LocalPlayerAwareWindowInsets
 import com.dd3boh.outertune.LocalPlayerConnection
 import com.dd3boh.outertune.R
 import com.dd3boh.outertune.constants.MaxImageCacheSizeKey
-import com.dd3boh.outertune.constants.PlaylistFilter
-import com.dd3boh.outertune.constants.PlaylistSortType
 import com.dd3boh.outertune.constants.SongSortType
 import com.dd3boh.outertune.extensions.tryOrNull
-import com.dd3boh.outertune.models.toMediaMetadata
 import com.dd3boh.outertune.playback.ExoDownloadService
 import com.dd3boh.outertune.ui.component.IconButton
 import com.dd3boh.outertune.ui.component.ListPreference
@@ -60,10 +57,8 @@ import com.dd3boh.outertune.ui.utils.formatFileSize
 import com.dd3boh.outertune.utils.rememberPreference
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.forEach
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import timber.log.Timber
 
 @SuppressLint("PrivateResource")
 @OptIn(ExperimentalCoilApi::class, ExperimentalMaterial3Api::class)
