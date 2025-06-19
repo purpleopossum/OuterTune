@@ -181,6 +181,15 @@ interface PlaylistsDao {
         ))
     }
 
+    @Query("DELETE FROM playlist_song_map WHERE playlistId = :playlistId AND songId = :songId")
+    fun deleteMapping(playlistId: String, songId: String)
+
+    @Query("SELECT songId FROM playlist_song_map WHERE playlistId = :playlistId ORDER BY position ASC")
+    fun getSongsInPlaylistSorted(playlistId: String): List<String>
+
+    @Query("UPDATE playlist_song_map SET position = :position WHERE playlistId = :playlistId AND songId = :songId")
+    fun updatePosition(playlistId: String, songId: String, position: Int)
+
     @Transaction
     fun addSongToPlaylist(playlist: Playlist, songIds: List<String>) {
         var position = playlist.songCount
@@ -192,6 +201,19 @@ interface PlaylistsDao {
                     position = position++
                 )
             )
+        }
+    }
+
+    @Transaction
+    fun removeSongsFromPlaylist(playlist: Playlist, songIds: List<String>) {
+        songIds.forEach { id ->
+            deleteMapping(playlist.id, id)
+        }
+
+        // Dopo la rimozione, aggiorna le posizioni
+        val updatedSongs = getSongsInPlaylistSorted(playlist.id)
+        updatedSongs.forEachIndexed { index, songId ->
+            updatePosition(playlist.id, songId, index)
         }
     }
 

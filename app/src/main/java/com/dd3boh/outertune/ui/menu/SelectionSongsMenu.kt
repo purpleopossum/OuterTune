@@ -26,7 +26,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.exoplayer.offline.Download
@@ -60,7 +59,6 @@ fun SelectionMediaMetadataMenu(
     clearAction: () -> Unit,
     onRemoveFromHistory: (() -> Unit)? = null,
 ) {
-    val context = LocalContext.current
     val database = LocalDatabase.current
     val downloadUtil = LocalDownloadUtil.current
     val playerConnection = LocalPlayerConnection.current ?: return
@@ -140,6 +138,25 @@ fun SelectionMediaMetadataMenu(
         onDismiss = { showChoosePlaylistDialog = false }
     )
 
+    var showRemoveFromPlaylistDialog by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    RemoveFromPlaylistDialog(
+        isVisible = showRemoveFromPlaylistDialog,
+        onGetSong = {
+            selection.map {
+                runBlocking {
+                    withContext(Dispatchers.IO) {
+                        database.insert(it)
+                    }
+                }
+                it.id
+            }
+        },
+        onDismiss = { showRemoveFromPlaylistDialog = false }
+    )
+
     var showRemoveDownloadDialog by remember {
         mutableStateOf(false)
     }
@@ -175,6 +192,18 @@ fun SelectionMediaMetadataMenu(
                 }
             }
         )
+//        if (showRemoveFromPlaylistDialog) {
+//            RemoveFromPlaylistDialog(
+//                navController = navController,
+//                isVisible = showRemoveFromPlaylistDialog,
+//                onGetSong = {
+//                    selection.map { it.id }
+//                },
+//                onDismiss = {
+//                    showRemoveFromPlaylistDialog = false
+//                }
+//            )
+//        }
     }
 
     GridMenu(
@@ -208,6 +237,9 @@ fun SelectionMediaMetadataMenu(
             clearAction()
         }
 
+
+
+
         GridMenuItem(
             icon = R.drawable.shuffle,
             title = R.string.shuffle
@@ -235,6 +267,13 @@ fun SelectionMediaMetadataMenu(
             title = R.string.add_to_playlist
         ) {
             showChoosePlaylistDialog = true
+        }
+
+        GridMenuItem(
+            icon = Icons.Rounded.Delete,
+            title = R.string.remove_from_playlist,
+        ) {
+            showRemoveFromPlaylistDialog = true
         }
 
         if (!allLocal) {

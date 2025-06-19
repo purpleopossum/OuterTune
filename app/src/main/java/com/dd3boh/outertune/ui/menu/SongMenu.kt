@@ -174,6 +174,30 @@ fun SongMenu(
         onDismiss = { showChoosePlaylistDialog = false }
     )
 
+    var showRemoveFromPlaylistDialog by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+    RemoveFromPlaylistDialog(
+        isVisible = showRemoveFromPlaylistDialog,
+        onGetSong = { playlist ->
+            coroutineScope.launch(Dispatchers.IO) {
+                val playlistId = playlist.playlist.browseId ?: return@launch
+                val videoId = song.id
+
+                    playlist.playlist.browseId.let { browseId ->
+                        YouTube.removeFromPlaylist(playlistId, videoId, browseId)
+                }
+            }
+            listOf(song.id)
+        },
+        onDismiss = {
+            showRemoveFromPlaylistDialog = false
+        }
+    )
+
+
+
     var showSelectArtistDialog by rememberSaveable {
         mutableStateOf(false)
     }
@@ -328,6 +352,13 @@ fun SongMenu(
             title = R.string.add_to_playlist
         ) {
             showChoosePlaylistDialog = true
+        }
+
+        GridMenuItem(
+            icon = Icons.Rounded.Delete,
+            title = R.string.remove_from_playlist,
+        ) {
+            showRemoveFromPlaylistDialog = true
         }
 
         if (playlistSong != null && (playlistSong.song.song.isLocal || syncMode == SyncMode.RW)) {
