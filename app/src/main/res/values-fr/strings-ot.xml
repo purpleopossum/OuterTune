@@ -6,13 +6,13 @@
     <string name="select">Mode de sélection</string>
     <string name="library">Bibliothèque</string>
     <string name="song_added_to_queue">\"%s\" inséré dans la file d\'attente</string>
-    <string name="queue_searched_songs_ot">Recherche :</string>
+    <string name="queue_searched_songs_ot">Recherche :</string>
     <string name="sort_by_date_released">Date de sortie</string>
     <string name="local_history">Locale</string>
     <string name="remote_history">Distant</string>
     <string name="create_queue">Nouvelle file d\'attente</string>
     <string name="like_all">Tout liker</string>
-    <string name="delete_lyric_confirm">Voulez-vous vraiment supprimer les paroles enregistrées pour \"%s\" ?</string>
+    <string name="delete_lyric_confirm">Voulez-vous vraiment supprimer les paroles enregistrées pour \"%s\" ?</string>
     <string name="sort_by_date_modified">Date de modification</string>
     <string name="sort_by_like_date">Date aimée</string>
     <string name="sort_by_play_count">Nombre de lectures</string>
@@ -52,8 +52,7 @@
     <string name="scanner_type_title">Extracteur de métadonnées</string>
     <string name="scanner_variant_rescan">Réanalyser l\'intégralité de la bibliothèque et recharger les métadonnées de tous les titres</string>
     <string name="scanner_online_artist_linking">Essayer de lier les artistes des fichiers locaux avec ceux de YouTube Music</string>
-    <string name="pause_remote_listen_history">Partager l\'historique d\'écoute avec YouTube Music</string>
-    <string name="m3u_import_song_failed">Impossible d\'importer :</string>
+    <string name="import_failed_songs">Impossible d\'importer :</string>
     <string name="experimental_settings_title">Expérimental</string>
     <string name="dev_settings_title">Activer les paramètres du développeur</string>
     <string name="oobe_welcome_message">Bienvenue sur OuterTune</string>
@@ -67,7 +66,7 @@
     <string name="info">Information</string>
     <string name="folders">Dossiers</string>
     <string name="create_sync_playlist">Synchroniser la playlist</string>
-    <string name="create_sync_playlist_description">Remarque : cela permet la synchronisation avec YouTube Music. Ce paramètre ne peut pas être modifié ultérieurement. Vous ne pouvez pas ajouter de titres locaux aux playlists synchronisées.</string>
+    <string name="create_sync_playlist_description">Remarque : cela permet la synchronisation avec YouTube Music. Ce paramètre ne peut pas être modifié ultérieurement. Vous ne pouvez pas ajouter de titres locaux aux playlists synchronisées.</string>
     <string name="audio_offload">Activer le déchargement</string>
     <string name="local_library_enable_title">Activer les médias locaux</string>
     <string name="token_adv_login_description">Il s\'agit d\'une méthode de connexion avancée. En guise d\'alternative au portail Web, vous pouvez saisir ou mettre à jour directement votre jeton de connexion ici. Par exemple, cela peut accélérer la connexion sur plusieurs appareils. Veuillez noter que tout format de jeton non valide que l\'application ne parvient pas à analyser ne sera pas accepté</string>
@@ -80,12 +79,12 @@
     <string name="slim_navbar_title">Barre de navigation fine</string>
     <string name="scanner_warning">Par défaut, l\'analyse ne rechargera pas les métadonnées des titres existants, sauf si vous spécifiez le contraire ci-dessus. Selon la taille de votre bibliothèque, cela peut prendre un certain temps.</string>
     <string name="slim_navbar_description">Supprimer les étiquettes de texte pour réduire la hauteur de la barre de navigation</string>
-    <string name="show_liked_and_downloaded_playlist">Afficher les playlists appréciées et téléchargées dans la bibliothèque</string>
+    <string name="show_liked_and_downloaded_playlist">Afficher les playlists des titres appréciés et téléchargés dans la bibliothèque</string>
     <string name="keep_alive_title">Empêcher le système de tuer l\'application</string>
     <string name="lyrics_prefer_local_description">Donnez la priorité à la résolution des fichiers de paroles locaux avant d\'utiliser tous les fournisseurs de cloud. Désactivez cette option pour donner la priorité aux fournisseurs de cloud</string>
     <string name="persistent_queue_desc_ot">Restaurer les précédentes files d\'attente ouvertes au démarrage de l\'application</string>
     <string name="lyrics_multiline_title">Lire les paroles sur plusieurs lignes</string>
-    <string name="import_m3u">Importer une playlist (m3u)</string>
+    <string name="m3u_import_playlist">Importer une playlist (m3u)</string>
     <string name="keep_alive_description">Utilisez un service de premier plan persistant pour empêcher la fermeture d’OuterTune en arrière-plan.</string>
     <string name="lyrics_multiline_description">Traitez toutes les lignes entre les points de synchronisation comme un seul texte lyrique</string>
     <string name="lyrics_trim_title">Supprimer les espaces autour des paroles</string>
@@ -128,7 +127,7 @@
         <item quantity="other">%d titres traités</item>
     </plurals>
     <string name="swipe2Queue">Glisser pour mettre en file d’attente</string>
-    <string name="playlist_add_local_to_synced_note">Remarque : l\'ajout de titres locaux aux playlists synchronisées / distants n\'est pas pris en charge. Toute autre combinaison est valide</string>
+    <string name="playlist_add_local_to_synced_note">Remarque : l\'ajout de titres locaux aux playlists synchronisées / distants n\'est pas pris en charge. Toute autre combinaison est valide</string>
     <string name="grp_lyrics_format">Formatage</string>
     <string name="tab_arrangement_disable_tip">--- Faites glisser ci-dessous pour désactiver ---</string>
     <string name="scanner_progress_syncing">Synchronisation…</string>
@@ -137,9 +136,8 @@
     <string name="err_stop_on_error">Une erreur s\'est produite. La lecture s\'est arrêtée</string>
     <string name="err_play_next_on_error">Une erreur s\'est produite. Lecture suivante</string>
     <string name="err_stop_on_too_many_errors">Trop d\'erreurs. La lecture est arrêtée</string>
-    <string name="wait_to_reconnect">Attendez pour vous reconnecter</string>"&gt;
-
-<string name="grp_general">Général</string>
+    <string name="wait_to_reconnect">Attendez pour vous reconnecter</string>
+    <string name="grp_general">Général</string>
     <string name="queue_local_history">Historique (locale)</string>
     <string name="queue_remote_history">Historique (à distance)</string>
     <string name="scanner_progress_complete">Analyse terminée</string>
@@ -147,4 +145,27 @@
     <string name="action_cancel">Annuler</string>
     <string name="queues_empty">Pas de files d\'attente</string>
     <string name="queues_title">Files d\'attente</string>
+    <string name="pause_remote_listen_history">Partager l\'historique d\'écoute avec YouTube Music</string>
+    <string name="swipe_to_skip_title">Balayer horizontalement pour changer de titre</string>
+    <string name="swipe_to_skip_description">Activer le balayage horizontal dans le lecteur pour changer de titre</string>
+    <string name="filter_arrangement">Organiser les filtres</string>
+    <string name="restart_to_apply_changes">Redémarrez l\'application afin que les modifications prennent effet</string>
+    <string name="android_auto">Android Auto</string>
+    <string name="missing_media_permission_warning">Des autorisations de stockage sont requises pour les médias locaux. Cliquez pour accorder l\'autorisation.</string>
+    <string name="more_settings">Paramètres Avancés</string>
+    <string name="grp_account_sync">Compte et Synchronisation</string>
+    <string name="sync_conflict_overwrite">Remplacer le contenu local par du contenu distant</string>
+    <string name="sync_conflict_title">Résolution des conflits</string>
+    <string name="sync_mode">Mode de synchronisation</string>
+    <string name="sync_mode_ro">Lecture seule (Afficher le contenu distant)</string>
+    <string name="grp_library_and_content">Bibliothèque et Contenu</string>
+    <string name="sync_conflict_add_only">Conservez tout le contenu local, ajoutez du nouveau contenu distant</string>
+    <string name="sync_mode_rw">Lecture / Écriture (permet également de modifier le contenu distant)</string>
+    <string name="grp_sync">Synchroniser</string>
+    <string name="playlist_missing_note">Playlists manquantes ? Cliquez ici pour activer la synchronisation en lecture/écriture dans les paramètres.</string>
+    <string name="checking_for_update">Vérification des mises à jour</string>
+    <string name="no_updates_available">Aucune mise à jour disponible</string>
+    <string name="check_for_update">Vérifier les mises à jour</string>
+    <string name="grp_behavior">Comportement</string>
+    <string name="library_empty">Le contenu de votre bibliothèque s\'affichera ici</string>
 </resources>

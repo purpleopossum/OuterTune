@@ -8,8 +8,8 @@
 
 package com.dd3boh.outertune.ui.screens
 
-import android.provider.Settings
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,35 +39,31 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.automirrored.rounded.List
-import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.automirrored.rounded.NavigateBefore
 import androidx.compose.material.icons.automirrored.rounded.NavigateNext
 import androidx.compose.material.icons.rounded.ArrowDownward
 import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.Autorenew
-import androidx.compose.material.icons.rounded.Backup
 import androidx.compose.material.icons.rounded.Contrast
 import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.Language
+import androidx.compose.material.icons.rounded.LocationOn
 import androidx.compose.material.icons.rounded.Lyrics
 import androidx.compose.material.icons.rounded.MusicVideo
 import androidx.compose.material.icons.rounded.NotInterested
-import androidx.compose.material.icons.rounded.Palette
-import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material.icons.rounded.RadioButtonChecked
 import androidx.compose.material.icons.rounded.RadioButtonUnchecked
 import androidx.compose.material.icons.rounded.SdCard
 import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -80,7 +76,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -94,55 +89,46 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.util.fastForEach
-import androidx.compose.ui.util.fastForEachIndexed
 import androidx.navigation.NavController
 import com.dd3boh.outertune.BuildConfig
 import com.dd3boh.outertune.R
-import com.dd3boh.outertune.constants.AccountChannelHandleKey
-import com.dd3boh.outertune.constants.AccountEmailKey
-import com.dd3boh.outertune.constants.AccountNameKey
 import com.dd3boh.outertune.constants.AutomaticScannerKey
+import com.dd3boh.outertune.constants.ContentCountryKey
+import com.dd3boh.outertune.constants.ContentLanguageKey
+import com.dd3boh.outertune.constants.CountryCodeToName
+import com.dd3boh.outertune.constants.DarkMode
 import com.dd3boh.outertune.constants.DarkModeKey
-import com.dd3boh.outertune.constants.DataSyncIdKey
+import com.dd3boh.outertune.constants.EnabledTabsKey
 import com.dd3boh.outertune.constants.FirstSetupPassed
 import com.dd3boh.outertune.constants.InnerTubeCookieKey
-import com.dd3boh.outertune.constants.LibraryFilter
+import com.dd3boh.outertune.constants.LanguageCodeToName
 import com.dd3boh.outertune.constants.LibraryFilterKey
 import com.dd3boh.outertune.constants.LocalLibraryEnableKey
 import com.dd3boh.outertune.constants.LyricTrimKey
-import com.dd3boh.outertune.constants.NavigationBarHeight
-import com.dd3boh.outertune.constants.NewInterfaceKey
 import com.dd3boh.outertune.constants.PureBlackKey
-import com.dd3boh.outertune.constants.VisitorDataKey
-import com.dd3boh.outertune.db.entities.ArtistEntity
-import com.dd3boh.outertune.db.entities.Song
-import com.dd3boh.outertune.db.entities.SongEntity
-import com.dd3boh.outertune.extensions.move
-import com.dd3boh.outertune.ui.component.ChipsLazyRow
+import com.dd3boh.outertune.constants.SYSTEM_DEFAULT
 import com.dd3boh.outertune.ui.component.EnumListPreference
-import com.dd3boh.outertune.ui.component.InfoLabel
-import com.dd3boh.outertune.ui.component.PreferenceEntry
+import com.dd3boh.outertune.ui.component.ListPreference
+import com.dd3boh.outertune.ui.component.PreferenceGroupTitle
 import com.dd3boh.outertune.ui.component.ResizableIconButton
-import com.dd3boh.outertune.ui.component.SongListItem
+import com.dd3boh.outertune.ui.component.SettingsClickToReveal
 import com.dd3boh.outertune.ui.component.SwitchPreference
-import com.dd3boh.outertune.ui.component.TextFieldDialog
-import com.dd3boh.outertune.ui.screens.settings.DarkMode
-import com.dd3boh.outertune.ui.screens.settings.NavigationTab
-import com.dd3boh.outertune.utils.decodeTabString
+import com.dd3boh.outertune.ui.screens.Screens.LibraryFilter
+import com.dd3boh.outertune.constants.DEFAULT_ENABLED_TABS
+import com.dd3boh.outertune.ui.screens.settings.fragments.AccountFrag
+import com.dd3boh.outertune.ui.screens.settings.fragments.LocalScannerExtraFrag
+import com.dd3boh.outertune.ui.screens.settings.fragments.LocalScannerFrag
 import com.dd3boh.outertune.utils.rememberEnumPreference
 import com.dd3boh.outertune.utils.rememberPreference
+import com.zionhuang.innertube.YouTube
 import com.zionhuang.innertube.utils.parseCookieString
-import kotlinx.coroutines.delay
-import java.time.LocalDateTime
+import java.util.Locale
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SetupWizard(
     navController: NavController,
@@ -154,19 +140,20 @@ fun SetupWizard(
 
     val (firstSetupPassed, onFirstSetupPassedChange) = rememberPreference(FirstSetupPassed, defaultValue = false)
 
+    // theme & interface
+    val (contentLanguage, onContentLanguageChange) = rememberPreference(
+        key = ContentLanguageKey,
+        defaultValue = "system"
+    )
+    val (contentCountry, onContentCountryChange) = rememberPreference(key = ContentCountryKey, defaultValue = "system")
+
     // content prefs
     val (darkMode, onDarkModeChange) = rememberEnumPreference(DarkModeKey, defaultValue = DarkMode.AUTO)
     val (pureBlack, onPureBlackChange) = rememberPreference(PureBlackKey, defaultValue = false)
-    val (newInterfaceStyle, onNewInterfaceStyleChange) = rememberPreference(key = NewInterfaceKey, defaultValue = true)
     var filter by rememberEnumPreference(LibraryFilterKey, LibraryFilter.ALL)
 
 
-    val (accountName, onAccountNameChange) = rememberPreference(AccountNameKey, "")
-    val (accountEmail, onAccountEmailChange) = rememberPreference(AccountEmailKey, "")
-    val (accountChannelHandle, onAccountChannelHandleChange) = rememberPreference(AccountChannelHandleKey, "")
-    val (innerTubeCookie, onInnerTubeCookieChange) = rememberPreference(InnerTubeCookieKey, "")
-    val (visitorData, onVisitorDataChange) = rememberPreference(VisitorDataKey, "")
-    val (dataSyncId, onDataSyncIdChange) = rememberPreference(DataSyncIdKey, "")
+    val innerTubeCookie by rememberPreference(InnerTubeCookieKey, "")
     val isLoggedIn = remember(innerTubeCookie) {
         "SAPISID" in parseCookieString(innerTubeCookie)
     }
@@ -175,9 +162,19 @@ fun SetupWizard(
     // local media prefs
     val (localLibEnable, onLocalLibEnableChange) = rememberPreference(LocalLibraryEnableKey, defaultValue = true)
     val (autoScan, onAutoScanChange) = rememberPreference(AutomaticScannerKey, defaultValue = false)
+    val (enabledTabs, onEnabledTabsChange) = rememberPreference(EnabledTabsKey, defaultValue = DEFAULT_ENABLED_TABS)
 
     var position by remember {
         mutableIntStateOf(0)
+    }
+
+    LaunchedEffect(localLibEnable) {
+        val containsFolders = enabledTabs.contains('F')
+        if (localLibEnable && !containsFolders) {
+            onEnabledTabsChange(enabledTabs + "F")
+        } else if (!localLibEnable && containsFolders) {
+            onEnabledTabsChange(enabledTabs.filterNot { it == 'F' })
+        }
     }
 
     val MAX_POS = 4
@@ -197,7 +194,7 @@ fun SetupWizard(
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 12.dp)
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -439,29 +436,6 @@ fun SetupWizard(
 
                     // appearance
                     1 -> {
-                        val dummySong = Song(
-                            artists = listOf(
-                                ArtistEntity(
-                                    id = "uwu",
-                                    name = "Artist",
-                                    isLocal = true
-                                )
-                            ),
-                            song = SongEntity(
-                                id = "owo",
-                                title = "Title",
-                                duration = 310,
-                                inLibrary = LocalDateTime.now(),
-                                isLocal = true,
-                                localPath = "/storage"
-                            ),
-                        )
-
-                        val dummySongs = ArrayList<Song>()
-                        for (i in 0..4) {
-                            dummySongs.add(dummySong)
-                        }
-
                         Text(
                             text = stringResource(R.string.grp_interface),
                             style = MaterialTheme.typography.headlineLarge,
@@ -469,14 +443,6 @@ fun SetupWizard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 24.dp, vertical = 8.dp)
-                        )
-
-                        // interface style
-                        SwitchPreference(
-                            title = { Text(stringResource(R.string.new_interface)) },
-                            icon = { Icon(Icons.Rounded.Palette, null) },
-                            checked = newInterfaceStyle,
-                            onCheckedChange = onNewInterfaceStyleChange
                         )
 
                         // light/dark theme
@@ -500,197 +466,56 @@ fun SetupWizard(
                             onCheckedChange = onPureBlackChange
                         )
 
-                        Column(
-                            Modifier.background(MaterialTheme.colorScheme.secondary.copy(0.2f))
-                        ) {
-                            Spacer(Modifier.height(16.dp))
-
-                            if (newInterfaceStyle) {
-                                // for new layout
-                                val filterString = when (filter) {
-                                    LibraryFilter.ALBUMS -> stringResource(R.string.albums)
-                                    LibraryFilter.ARTISTS -> stringResource(R.string.artists)
-                                    LibraryFilter.PLAYLISTS -> stringResource(R.string.playlists)
-                                    LibraryFilter.SONGS -> stringResource(R.string.songs)
-                                    LibraryFilter.FOLDERS -> stringResource(R.string.folders)
-                                    LibraryFilter.ALL -> ""
+                        ListPreference(
+                            title = { Text(stringResource(R.string.content_language)) },
+                            icon = { Icon(Icons.Rounded.Language, null) },
+                            selectedValue = contentLanguage,
+                            values = listOf(SYSTEM_DEFAULT) + LanguageCodeToName.keys.toList(),
+                            valueText = {
+                                LanguageCodeToName.getOrElse(it) {
+                                    stringResource(R.string.system_default)
                                 }
+                            },
+                            onValueSelected = { newValue ->
+                                val locale = Locale.getDefault()
+                                val languageTag = locale.toLanguageTag().replace("-Hant", "")
 
-                                val defaultFilter: Collection<Pair<LibraryFilter, String>> =
-                                    decodeTabString("HSABL").map {
-                                        when (it) {
-                                            NavigationTab.ALBUM -> LibraryFilter.ALBUMS to stringResource(R.string.albums)
-                                            NavigationTab.ARTIST -> LibraryFilter.ARTISTS to stringResource(R.string.artists)
-                                            NavigationTab.PLAYLIST -> LibraryFilter.PLAYLISTS to stringResource(R.string.playlists)
-                                            NavigationTab.SONG -> LibraryFilter.SONGS to stringResource(R.string.songs)
-                                            NavigationTab.FOLDERS -> LibraryFilter.FOLDERS to stringResource(R.string.folders)
-                                            else -> LibraryFilter.ALL to stringResource(R.string.home) // there is no all filter, use as null value
-                                        }
-                                    }.filterNot { it.first == LibraryFilter.ALL }
-
-                                val chips = remember { SnapshotStateList<Pair<LibraryFilter, String>>() }
-
-                                var filterSelected by remember {
-                                    mutableStateOf(filter)
-                                }
-
-                                LaunchedEffect(Unit) {
-                                    if (filter == LibraryFilter.ALL)
-                                        chips.addAll(defaultFilter)
-                                    else
-                                        chips.add(filter to filterString)
-                                }
-
-                                val animatorDurationScale = Settings.Global.getFloat(
-                                    context.contentResolver,
-                                    Settings.Global.ANIMATOR_DURATION_SCALE, 1.0f
-                                ).toLong()
-
-                                suspend fun animationBasedDelay(value: Long) {
-                                    delay(value * animatorDurationScale)
-                                }
-
-                                // Update the filters list in a proper way so that the animations of the LazyRow can work.
-                                LaunchedEffect(filter) {
-                                    val filterIndex = defaultFilter.indexOf(defaultFilter.find { it.first == filter })
-                                    val currentPairIndex = if (chips.size > 0) defaultFilter.indexOf(chips[0]) else -1
-                                    val currentPair = if (chips.size > 0) chips[0] else null
-
-                                    if (filter == LibraryFilter.ALL) {
-                                        defaultFilter.reversed().fastForEachIndexed { index, it ->
-                                            val curFilterIndex = defaultFilter.indexOf(it)
-                                            if (!chips.contains(it)) {
-                                                chips.add(0, it)
-                                                if (currentPairIndex > curFilterIndex) animationBasedDelay(100)
-                                                else {
-                                                    currentPair?.let {
-                                                        animationBasedDelay(2)
-                                                        chips.move(chips.indexOf(it), 0)
-                                                    }
-                                                    animationBasedDelay(80 + (index * 30).toLong())
-                                                }
-                                            }
-                                        }
-                                        animationBasedDelay(100)
-                                        filterSelected = LibraryFilter.ALL
-                                    } else {
-                                        filterSelected = filter
-                                        chips.filter { it.first != filter }
-                                            .onEachIndexed { index, it ->
-                                                if (chips.contains(it)) {
-                                                    chips.remove(it)
-                                                    if (index > filterIndex) animationBasedDelay(150 + 30 * index.toLong())
-                                                    else animationBasedDelay(80)
-                                                }
-                                            }
-                                    }
-                                }
-
-                                // filter chips
-                                Row {
-                                    ChipsLazyRow(
-                                        chips = chips,
-                                        currentValue = filter,
-                                        onValueUpdate = {
-                                            filter = if (filter == LibraryFilter.ALL)
-                                                it
-                                            else
-                                                LibraryFilter.ALL
-                                        },
-                                        modifier = Modifier.weight(1f),
-                                        selected = { it == filterSelected }
-                                    )
-
-                                    if (filter != LibraryFilter.SONGS) {
-                                        IconButton(
-                                            onClick = {},
-                                            modifier = Modifier.padding(end = 6.dp)
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.AutoMirrored.Rounded.List,
-                                                contentDescription = null
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                            // sort header
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                            ) {
-                                SortHeaderDummy()
-
-                                Spacer(Modifier.weight(1f))
-
-                                Text(
-                                    text = pluralStringResource(R.plurals.n_song, dummySongs.size, dummySongs.size),
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.secondary
+                                YouTube.locale = YouTube.locale.copy(
+                                    hl = newValue.takeIf { it != SYSTEM_DEFAULT }
+                                        ?: locale.language.takeIf { it in LanguageCodeToName }
+                                        ?: languageTag.takeIf { it in LanguageCodeToName }
+                                        ?: "en"
                                 )
+
+                                onContentLanguageChange(newValue)
                             }
-
-
-                            // sample UI
-                            Column {
-                                dummySongs.forEach { song ->
-                                    SongListItem(
-                                        song = song,
-                                        onPlay = {},
-                                        onSelectedChange = {},
-                                        inSelectMode = null,
-                                        isSelected = false,
-                                        navController = navController,
-                                        enableSwipeToQueue = false,
-                                        disableShowMenu = true
-                                    )
+                        )
+                        ListPreference(
+                            title = { Text(stringResource(R.string.content_country)) },
+                            icon = { Icon(Icons.Rounded.LocationOn, null) },
+                            selectedValue = contentCountry,
+                            values = listOf(SYSTEM_DEFAULT) + CountryCodeToName.keys.toList(),
+                            valueText = {
+                                CountryCodeToName.getOrElse(it) {
+                                    stringResource(R.string.system_default)
                                 }
+                            },
+                            onValueSelected = { newValue ->
+                                val locale = Locale.getDefault()
+
+                                YouTube.locale = YouTube.locale.copy(
+                                    gl = newValue.takeIf { it != SYSTEM_DEFAULT }
+                                        ?: locale.country.takeIf { it in CountryCodeToName }
+                                        ?: "US"
+                                )
+
+                                onContentCountryChange(newValue)
                             }
-
-
-                            val navigationItems =
-                                if (!newInterfaceStyle) Screens.getScreens("HSABL") else Screens.MainScreensNew
-                            NavigationBar(
-                                windowInsets = WindowInsets(0, 0, 0, 0),
-                                modifier = Modifier.height(NavigationBarHeight)
-                            ) {
-                                navigationItems.fastForEach { screen ->
-                                    NavigationBarItem(
-                                        selected = false,
-                                        icon = {
-                                            Icon(
-                                                screen.icon,
-                                                contentDescription = null
-                                            )
-                                        },
-                                        label = {
-                                            Text(
-                                                text = stringResource(screen.titleId),
-                                                maxLines = 1,
-                                                overflow = TextOverflow.Ellipsis
-                                            )
-                                        },
-                                        onClick = {
-                                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
+                        )
                     }
 
                     // account
                     2 -> {
-                        var showToken: Boolean by remember {
-                            mutableStateOf(false)
-                        }
-
-                        var showTokenEditor by remember {
-                            mutableStateOf(false)
-                        }
-
                         Text(
                             text = stringResource(R.string.account),
                             style = MaterialTheme.typography.headlineLarge,
@@ -700,86 +525,8 @@ fun SetupWizard(
                                 .padding(horizontal = 24.dp, vertical = 8.dp)
                         )
 
+                        AccountFrag(navController)
 
-                        PreferenceEntry(
-                            title = { Text(if (isLoggedIn) accountName else stringResource(R.string.login)) },
-                            description = if (isLoggedIn) {
-                                accountEmail.takeIf { it.isNotEmpty() }
-                                    ?: accountChannelHandle.takeIf { it.isNotEmpty() }
-                            } else null,
-                            icon = { Icon(Icons.Rounded.Person, null) },
-                            onClick = { navController.navigate("login") }
-                        )
-                        if (isLoggedIn) {
-                            PreferenceEntry(
-                                title = { Text(stringResource(R.string.logout)) },
-                                icon = { Icon(Icons.AutoMirrored.Rounded.Logout, null) },
-                                onClick = {
-                                    onInnerTubeCookieChange("")
-                                }
-                            )
-                        }
-                        if (showTokenEditor) {
-                            TextFieldDialog(
-                                modifier = Modifier,
-                                initialTextFieldValue = TextFieldValue(innerTubeCookie),
-                                onDone = { data ->
-                                    data.split("\n").forEach {
-                                        if (it.startsWith("***INNERTUBE COOKIE*** =")) {
-                                            onInnerTubeCookieChange(it.substringAfter("***INNERTUBE COOKIE*** ="))
-                                        } else if (it.startsWith("***VISITOR DATA*** =")) {
-                                            onVisitorDataChange(it.substringAfter("***VISITOR DATA*** ="))
-                                        } else if (it.startsWith("***DATASYNC ID*** =")) {
-                                            onDataSyncIdChange(it.substringAfter("***DATASYNC ID*** ="))
-                                        } else if (it.startsWith("***ACCOUNT NAME*** =")) {
-                                            onAccountNameChange(it.substringAfter("***ACCOUNT NAME*** ="))
-                                        } else if (it.startsWith("***ACCOUNT EMAIL*** =")) {
-                                            onAccountEmailChange(it.substringAfter("***ACCOUNT EMAIL*** ="))
-                                        } else if (it.startsWith("***ACCOUNT CHANNEL HANDLE*** =")) {
-                                            onAccountChannelHandleChange(it.substringAfter("***ACCOUNT CHANNEL HANDLE*** ="))
-                                        }
-                                    }
-                                },
-                                onDismiss = { showTokenEditor = false },
-                                singleLine = false,
-                                maxLines = 20,
-                                isInputValid = {
-                                    it.isNotEmpty() &&
-                                            try {
-                                                "SAPISID" in parseCookieString(it)
-                                                true
-                                            } catch (e: Exception) {
-                                                false
-                                            }
-                                },
-                                extraContent = {
-                                    InfoLabel(text = stringResource(R.string.token_adv_login_description))
-                                }
-                            )
-                        }
-                        PreferenceEntry(
-                            title = {
-                                if (showToken) {
-                                    Text(stringResource(R.string.token_shown))
-                                    Text(
-                                        text = if (isLoggedIn) innerTubeCookie else stringResource(R.string.not_logged_in),
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Light,
-                                        overflow = TextOverflow.Ellipsis,
-                                        maxLines = 1 // just give a preview so user knows it's at least there
-                                    )
-                                } else {
-                                    Text(stringResource(R.string.token_hidden))
-                                }
-                            },
-                            onClick = {
-                                if (showToken == false) {
-                                    showToken = true
-                                } else {
-                                    showTokenEditor = true
-                                }
-                            },
-                        )
                         SwitchPreference(
                             title = { Text(stringResource(R.string.ytm_sync)) },
                             icon = { Icon(Icons.Rounded.Lyrics, null) },
@@ -787,7 +534,6 @@ fun SetupWizard(
                             onCheckedChange = onYtmSyncChange,
                             isEnabled = isLoggedIn
                         )
-
                     }
 
                     // local media
@@ -810,25 +556,25 @@ fun SetupWizard(
                             onCheckedChange = onLocalLibEnableChange
                         )
 
-                        // automatic scanner
-                        SwitchPreference(
-                            title = { Text(stringResource(R.string.auto_scanner_title)) },
-                            description = stringResource(R.string.auto_scanner_description),
-                            icon = { Icon(Icons.Rounded.Autorenew, null) },
-                            checked = autoScan,
-                            onCheckedChange = onAutoScanChange,
-                            isEnabled = localLibEnable
-                        )
+                        AnimatedVisibility(localLibEnable) {
+                            Column {
+                                SwitchPreference(
+                                    title = { Text(stringResource(R.string.auto_scanner_title)) },
+                                    description = stringResource(R.string.auto_scanner_description),
+                                    icon = { Icon(Icons.Rounded.Autorenew, null) },
+                                    checked = autoScan,
+                                    onCheckedChange = onAutoScanChange
+                                )
+                                PreferenceGroupTitle(
+                                    title = stringResource(R.string.grp_manual_scanner)
+                                )
+                                LocalScannerFrag()
 
-
-                        PreferenceEntry(
-                            title = { Text(stringResource(R.string.oobe_local_scan_tooltip)) },
-                            icon = { Icon(Icons.Rounded.Backup, null) },
-                            onClick = {
-                                navController.navigate("settings/local")
-                            },
-                            isEnabled = localLibEnable
-                        )
+                                SettingsClickToReveal(stringResource(R.string.grp_extra_scanner_settings)) {
+                                    LocalScannerExtraFrag()
+                                }
+                            }
+                        }
                     }
 
                     // exiting
@@ -869,7 +615,7 @@ fun SetupWizard(
 
                             Row {
                                 IconButton(
-                                    onClick = { uriHandler.openUri("https://github.com/DD3Boh/OuterTune") }
+                                    onClick = { uriHandler.openUri("https://github.com/OuterTune/OuterTune") }
                                 ) {
                                     Icon(
                                         painter = painterResource(R.drawable.github),

@@ -37,7 +37,7 @@
     <string name="player_background_default">Як у системі</string>
     <string name="player_background_gradient">Градієнт</string>
     <string name="player_background_style">Стиль фону програвача</string>
-    <string name="show_liked_and_downloaded_playlist">Показувати вподобані та завантажені плейлисти в бібліотеці</string>
+    <string name="show_liked_and_downloaded_playlist">Показувати списки відтворення для пісень, які сподобалися та завантажених у бібліотеці</string>
     <string name="slim_navbar_title">Тонка панель навігації</string>
     <string name="tab_arrangement">Упорядкувати вкладки</string>
     <string name="like_autodownload">Автоматично завантажувати вподобані пісні</string>
@@ -59,7 +59,7 @@
     <string name="local_player_settings_title">Локальні медіафайли</string>
     <string name="flat_subfolders_title">Зрівняти підтеки</string>
     <string name="flat_subfolders_description">Вимкніть, щоб зберегти структуру файлів як на диску</string>
-    <string name="import_m3u">Імпортувати плейлист (m3u)</string>
+    <string name="m3u_import_playlist">Імпортувати плейлист (m3u)</string>
     <string name="m3u_import_playlist_failed">Не вдалося імпортувати плейлист</string>
     <string name="scan_paths_title">Налаштовуємо місця сканування…</string>
     <string name="scan_paths_tooltip">Всі підкаталоги також будуть змінені</string>
@@ -75,8 +75,7 @@
     <string name="scanner_type_title">Витягувач метаданих</string>
     <string name="scanner_type_taglib">Використовути вбудований витягувач метаданих TagLib</string>
     <string name="scanner_variant_rescan">Пересканувати всю бібліотеку та перезавантажити метадані всіх пісень</string>
-    <string name="pause_remote_listen_history">Ділитися історією прослуховування з YouTube Music</string>
-    <string name="m3u_import_song_failed">Не вдалось імпортувати:</string>
+    <string name="import_failed_songs">Не вдалось імпортувати:</string>
     <string name="oobe_use_backup">У мене є резервна копія</string>
     <string name="sort_by_play_count">Кількість відтворень</string>
     <string name="auto_playlist">Автоматичний плейлист</string>
@@ -139,9 +138,8 @@
     <string name="err_stop_on_error">Виникла помилка. Відтворення зупинено</string>
     <string name="err_stop_on_too_many_errors">Забагато помилок. Відтворення зупинено</string>
     <string name="err_play_next_on_error">Виникла помилка. Відтворюється наступна</string>
-    <string name="wait_to_reconnect">Дочекайтеся перепід\'єднання</string>"&gt;
-
-<string name="grp_general">Загальні</string>
+    <string name="wait_to_reconnect">Дочекайтеся перепід\'єднання</string>
+    <string name="grp_general">Загальні</string>
     <string name="queue_local_history">Історія (локальна)</string>
     <string name="queue_remote_history">Історія (віддалена)</string>
     <string name="scanner_progress_complete">Сканування завершено</string>
@@ -149,4 +147,27 @@
     <string name="action_cancel">Скасувати</string>
     <string name="queues_title">Черги</string>
     <string name="queues_empty">Без черг</string>
+    <string name="pause_remote_listen_history">Призупиніть надсилання історії прослуховування в YouTube Music</string>
+    <string name="swipe_to_skip_title">Проведіть горизонтально, щоб змінити пісню</string>
+    <string name="swipe_to_skip_description">Увімкніть горизонтальне гортання в плеєрі для перемикання пісень</string>
+    <string name="restart_to_apply_changes">Перезапустіть застосунок, щоби зміни набули чинності</string>
+    <string name="filter_arrangement">Упорядкувати фільтри</string>
+    <string name="android_auto">Android Auto</string>
+    <string name="more_settings">Більше налаштувань</string>
+    <string name="sync_mode_rw">Читати, записувати (також дозволити змінювати віддалений вміст)</string>
+    <string name="grp_library_and_content">Бібліотека та контент</string>
+    <string name="sync_conflict_add_only">Зберігати весь локальний вміст, додавати новий віддалений вміст</string>
+    <string name="grp_account_sync">Обліковий запис і синхронізація</string>
+    <string name="missing_media_permission_warning">Для локальних носіїв потрібні дозволи на зберігання. Натисніть, щоб надати дозвіл.</string>
+    <string name="sync_conflict_overwrite">Перезаписати локальний вміст віддаленим вмістом</string>
+    <string name="sync_conflict_title">Вирішення конфлікту</string>
+    <string name="sync_mode">Режим синхронізації</string>
+    <string name="sync_mode_ro">Лише читання (перегляд віддаленого вмісту)</string>
+    <string name="grp_sync">Синхронізація</string>
+    <string name="no_updates_available">Немає доступних оновлень</string>
+    <string name="checking_for_update">Перевірка оновлень</string>
+    <string name="check_for_update">Перевірити наявність оновлень</string>
+    <string name="playlist_missing_note">Немає списків відтворення? Натисніть тут, щоб увімкнути режим синхронізації читання та запису в налаштуваннях</string>
+    <string name="grp_behavior">Поведінка</string>
+    <string name="library_empty">Вміст вашої бібліотеки відображатиметься тут</string>
 </resources>

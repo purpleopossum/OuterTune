@@ -2,6 +2,9 @@
 while also allowing users to translate our app as well. New, specific strings to OuterTune go here. -->
 
 <resources>
+<!-- General -->
+    <string name="android_auto">Android Auto</string>
+
 <!-- Bottom navigation -->
     <string name="folders">Folders</string>
     <string name="library">Library</string>
@@ -16,6 +19,8 @@ while also allowing users to translate our app as well. New, specific strings to
     <string name="remote_history">Remote</string>
 
 <!-- Library screens -->
+    <string name="library_empty">Your library contents will show up here</string>
+    <string name="missing_media_permission_warning">Storage permissions is required for local media. Click to grant permission.</string>
 
 <!-- Queue -->
     <string name="queues_title">Queues</string>
@@ -31,9 +36,11 @@ while also allowing users to translate our app as well. New, specific strings to
 <!-- Menu -->
     <string name="select">Selection mode</string>
     <string name="like_all">Like all</string>
+    <string name="more_settings">More settings</string>
     <string name="delete_lyric_confirm">Do you really want to delete the stored lyrics for \"%s\"?</string>
 
 <!-- Player -->
+    <string name="err_general" translatable="false">plr</string>
     <string name="err_play_next_on_error">Error occurred. Playing next</string>
     <string name="err_stop_on_error">Error occurred. Playback stopped</string>
     <string name="err_stop_on_too_many_errors">Too many errors. Playback stopped</string>
@@ -50,6 +57,7 @@ while also allowing users to translate our app as well. New, specific strings to
     <string name="create_sync_playlist_description">Note: This allows for syncing with YouTube Music. This is NOT changeable later. You cannot add local songs to synced playlists.</string>
     <string name="play_count">Play count</string>
     <string name="playlist_add_local_to_synced_note">Note: Adding local songs to synced/remote playlists is unsupported. Any other combination is valid</string>
+    <string name="playlist_missing_note">Playlists missing? Click here to enable sync read-write mode in settings</string>
 
 <!-- Sync-->
     <string name="sync_progress_active">Syncing with YouTube account…</string>
@@ -59,20 +67,29 @@ while also allowing users to translate our app as well. New, specific strings to
     <string name="prefs_advanced">Advanced</string>
     <string name="settings_debug">Debug</string>
 
-	<string name="grp_audio">Audio</string>
+    <string name="grp_account_sync">Account and sync</string>
+    <string name="grp_audio">Audio</string>
+    <string name="grp_behavior">Behavior</string>
     <string name="grp_extra_scanner_settings">Additional scanner settings</string>
     <string name="grp_general">General</string>
     <string name="grp_interface">Interface</string>
     <string name="grp_layout">Layout</string>
+    <string name="grp_library_and_content">Library and content</string>
 	<string name="grp_localization">Localization</string>
     <string name="grp_lyrics_format">Formatting</string>
     <string name="grp_lyrics_parser">Parser</string>
     <string name="grp_lyrics_source">Lyric sources</string>
     <string name="grp_manual_scanner">Manual scanner</string>
     <string name="grp_proxy">Proxy</string>
+    <string name="grp_sync">Sync</string>
 
 <!-- About settings -->
     <string name="attrib_zhuang">Zion Huang for InnerTune</string>
+    <string name="check_for_update">Check for updates</string>
+    <string name="checking_for_update">Checking for updates</string>
+    <string name="attribution_title">Attribution</string>
+    <string name="no_updates_available">No updates available</string>
+    <string name="oss_licenses_title">Open source licenses</string>
     <string name="special_thanks">Special thanks</string>
 
 <!-- Appearance settings -->
@@ -81,18 +98,27 @@ while also allowing users to translate our app as well. New, specific strings to
     <string name="player_background_default">Follow theme</string>
     <string name="player_background_gradient">Gradient</string>
     <string name="player_background_style">Player background style</string>
-    <string name="show_liked_and_downloaded_playlist">Show liked and downloaded playlists in library</string>
+    <string name="show_liked_and_downloaded_playlist">Show playlists for liked and downloaded songs in library</string>
     <string name="slim_navbar_title">Slim navbar</string>
     <string name="slim_navbar_description">Remove text labels to reduce navbar height</string>
     <string name="tab_arrangement">Arrange tabs</string>
     <string name="tab_arrangement_disable_tip">--- Drag below here to disable ---</string>
     <string name="tab_arrangement_home_required">The Home tab is required.</string>
+    <string name="tablet_ui_title">Force tablet UI</string>
+    <string name="tablet_ui_title_description">Enable a landscape interface that is optimized for larger screens regardless of the current screen size</string>
+    <string name="filter_arrangement">Arrange filters</string>
 
 <!-- Content settings -->
     <string name="like_autodownload">Automatically download your liked songs</string>
     <string name="token_adv_login_description">This is an ADVANCED login method. As an alternative to the web portal, you may directly enter or update your login token here. For example, this can speed up logging in on multiple devices. Please note that any invalid token formats the app fails to parse will not be accepted</string>
     <string name="token_hidden">Tap to show token</string>
     <string name="token_shown">Tap again to copy or edit</string>
+    <string name="sync_conflict_add_only">Keep all local content, add new remote content</string>
+    <string name="sync_conflict_overwrite">Overwrite local content with remote content</string>
+    <string name="sync_conflict_title">Conflict resolution</string>
+    <string name="sync_mode">Sync mode</string>
+    <string name="sync_mode_ro">Read only (View remote content)</string>
+    <string name="sync_mode_rw">Read write (Also allow changes to remote content)</string>
     <string name="ytm_sync">Automatically sync with your YouTube Music account</string>
     <string name="wifi_only">Wi-Fi only</string>
 
@@ -108,14 +134,16 @@ while also allowing users to translate our app as well. New, specific strings to
     <string name="swipe2Queue_description">Swipe on a song to add it to "enqueue next" directly after currently playing song</string>
 
 <!--Lyrics settings -->
-    <string name="lyrics_settings_title">Lyrics</string>
+    <string name="lyrics_font_Size">Font size</string>
+    <string name="lyrics_karaoke_title">Karaoke style lyrics.</string>
+    <string name="lyrics_karaoke_description">Enables word by word lyric syncing. Requires lyrics format support.</string>
+    <string name="lyrics_karaoke_hz_title">Adjust karaoke lyrics update speed</string>
     <string name="lyrics_multiline_title">Read multiline lyrics</string>
     <string name="lyrics_multiline_description">Treat all the lines between sync points as one lyric text</string>
-    <string name="lyrics_trim_title">Remove spaces around lyrics</string>
     <string name="lyrics_prefer_local">Prefer local lyric files</string>
     <string name="lyrics_prefer_local_description">Prioritize resolving local lyric files before using all cloud providers. Turn this off to prioritize cloud providers</string>
-    <string name="lyrics_font_Size">Font size</string>
-
+    <string name="lyrics_settings_title">Lyrics</string>
+    <string name="lyrics_trim_title">Remove spaces around lyrics</string>
 
 <!-- Local player settings -->
     <string name="local_library_enable_title">Enable local media</string>
@@ -123,11 +151,6 @@ while also allowing users to translate our app as well. New, specific strings to
     <string name="local_player_settings_title">Local media</string>
     <string name="flat_subfolders_title">Flatten subfolders</string>
     <string name="flat_subfolders_description">Disable to preserve the file structure as on disk</string>
-
-    <string name="import_innertune_tooltip">Restoring InnerTune backups are supported, albeit a possibility of anomalies due to technical limitations</string>
-    <string name="import_m3u">Import a playlist (m3u)</string>
-    <string name="import_online">Import a playlist (m3u) (autosearch)</string>
-    <string name="m3u_import_playlist_failed">Failed to import playlist</string>
 
 <!-- Scanner settings -->
     <string name="auto_scanner_title">Scan automatically</string>
@@ -180,16 +203,32 @@ while also allowing users to translate our app as well. New, specific strings to
     <string name="scanner_variant_rescan">Rescan the entire library and reload all songs\' metadata</string>
     <string name="scanner_online_artist_linking">Try to link local files\' artists with ones on YouTube Music</string>
 
+<!-- Storage setting -->
+    <string name="dl_extra_path_title" translatable="false">Configure extra download locations…</string>
+    <string name="dl_extra_path_description" translatable="false">Songs from these directories are loaded into the app ONLY IF they have been played in the past, or you have them saved in a playlist</string>
+    <string name="dl_migrate_title" translatable="false">Migrate downloads to external storage…</string>
+    <string name="dl_migrate_description" translatable="false">Move downloads from app internal storage to the device\'s external storage</string>
+    <string name="dl_migrate_confirm" translatable="false">This will migrate ALL internal downloads to \"%s\", and this action cannot be undone. Continue?</string>
+    <string name="dl_main_path_title" translatable="false">Configure download directory…</string>
+    <string name="dl_main_path_tooltip" translatable="false">Due to Android system restrictions, only Music folder is allowed.</string>
+    <string name="dl_rescan_title" translatable="false">Rescan download folders…</string>
+    <string name="dl_rescan_description" translatable="false">Relink old downloads if the files or folder was moved</string>
+	<string name="dl_rescan_confirm" translatable="false">Rescan all download folders now? This can take a few minutes depending on the size of your library.</string>
+    <string name="restart_to_apply_changes" translatable="false">An app restart is required for changes to take effect</string>
+
 <!-- Privacy settings -->
-    <string name="pause_remote_listen_history">Share listen history with YouTube Music</string>
+    <string name="pause_remote_listen_history">Pause sharing listen history with YouTube Music</string>
 
 <!-- Backup and restore settings -->
-    <string name="m3u_import_song_failed">Could not import:</string>
+    <string name="import_innertune_tooltip">Restoring InnerTune backups are supported, albeit a possibility of anomalies due to technical limitations</string>
 
 <!-- Experimental settings -->
     <string name="experimental_settings_title">Experimental</string>
     <string name="dev_settings_title">Enable developer settings</string>
     <string name="dev_settings_description">Reveals additional advanced settings intended for development use</string>
+
+    <string name="swipe_to_skip_title">Swipe horizontally to change song</string>
+    <string name="swipe_to_skip_description">Enable swiping horizontally in the player to switch songs</string>
 
 <!-- Setup wizard -->
     <string name="oobe_welcome_message">Welcome to OuterTune</string>
@@ -201,10 +240,23 @@ while also allowing users to translate our app as well. New, specific strings to
     <string name="oobe_local_playback_description">Local music playback</string>
     <string name="oobe_use_backup">I have a backup</string>
 
+<!-- M3U -->
+    <string name="import_failed_songs">Could not import</string>
+    <string name="import_success_songs">Successfully imported</string>
+    <string name="m3u_export">Export as M3U file</string>
+    <string name="m3u_import_playlist">Import a playlist (m3u)</string>
+    <string name="m3u_import_playlist_failed">Failed to import</string>
+    <string name="m3u_ytm_lookup">Search on YouTube Music for songs not found in the app database</string>
+
 <!-- Misc -->
     <string name="action_back">Back</string>
     <string name="action_next">Next</string>
     <string name="action_skip">Skip</string>
     <string name="action_cancel">Cancel</string>
     <string name="info">Information</string>
+    <string name="speed_very_slow">Very slow</string>
+    <string name="speed_slow">Slow</string>
+    <string name="speed_medium">Medium</string>
+    <string name="speed_fast">Fast</string>
+    <string name="speed_very_fast">Very fast</string>
 </resources>
