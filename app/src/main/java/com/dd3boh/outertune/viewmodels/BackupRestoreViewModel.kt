@@ -17,9 +17,12 @@ import com.dd3boh.outertune.extensions.div
 import com.dd3boh.outertune.extensions.zipInputStream
 import com.dd3boh.outertune.extensions.zipOutputStream
 import com.dd3boh.outertune.playback.MusicService
+import com.dd3boh.outertune.ui.menu.readLines
 import com.dd3boh.outertune.utils.reportException
+import com.dd3boh.outertune.utils.scanners.LocalMediaScanner
 import com.dd3boh.outertune.utils.scanners.LocalMediaScanner.Companion.compareSong
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -32,10 +35,11 @@ import javax.inject.Inject
 import kotlin.system.exitProcess
 
 @HiltViewModel
-class BackupRestoreViewModel @Inject constructor(
+class BackupRestoreViewModel @Inject constructor( // TODO: make these calls non-blocking
+    @ApplicationContext val context: Context,
     val database: MusicDatabase,
 ) : ViewModel() {
-    fun backup(context: Context, uri: Uri) {
+    fun backup(uri: Uri) {
         runCatching {
             context.applicationContext.contentResolver.openOutputStream(uri)?.use {
                 it.buffered().zipOutputStream().use { outputStream ->
@@ -61,7 +65,7 @@ class BackupRestoreViewModel @Inject constructor(
         }
     }
 
-    fun restore(context: Context, uri: Uri) {
+    fun restore(uri: Uri) {
         runCatching {
             context.applicationContext.contentResolver.openInputStream(uri)?.use {
                 it.zipInputStream().use { inputStream ->
@@ -69,9 +73,10 @@ class BackupRestoreViewModel @Inject constructor(
                     while (entry != null) {
                         when (entry.name) {
                             SETTINGS_FILENAME -> {
-                                (context.filesDir / "datastore" / SETTINGS_FILENAME).outputStream().use { outputStream ->
-                                    inputStream.copyTo(outputStream)
-                                }
+                                (context.filesDir / "datastore" / SETTINGS_FILENAME).outputStream()
+                                    .use { outputStream ->
+                                        inputStream.copyTo(outputStream)
+                                    }
                             }
 
                             InternalDatabase.DB_NAME -> {
@@ -88,6 +93,7 @@ class BackupRestoreViewModel @Inject constructor(
                     }
                 }
             }
+            // TODO: This argument is a new instance so stopService will not remove anything
             context.stopService(Intent(context, MusicService::class.java))
             context.startActivity(Intent(context, MainActivity::class.java))
             exitProcess(0)
@@ -97,119 +103,48 @@ class BackupRestoreViewModel @Inject constructor(
         }
     }
 
-    /**
-     * Parse m3u file and scans the database for matching songs
-     */
-    fun loadM3u(
-        context: Context,
-        uri: Uri,
-        matchStrength: ScannerMatchCriteria = ScannerMatchCriteria.LEVEL_2
-    ): Triple<ArrayList<Song>, ArrayList<String>, String> {
-        val songs = ArrayList<Song>()
-        val rejectedSongs = ArrayList<String>()
+        fun loadM3UOnline(
+                    context: Context,
+                    uri: Uri,
+                ): ArrayList<Song> {
+                    val songs = ArrayList<Song>()
+                    runCatching {
+                            context.applicationContext.contentResolver.openInputStream(uri)?.use { stream ->
+                                    val lines = stream.readLines()
+                                    if (lines.first().startsWith("#EXTM3U")) {
+                                            lines.forEachIndexed { index, rawLine ->
+                                                    if (rawLine.startsWith("#EXTINF:")) {
+                                                            // maybe later write this to be more efficient
+                                                            val artists =
+                                                                    rawLine.substringAfter("#EXTINF:").substringAfter(',').substringBefore(" - ").split(';')
+                                                            val title = rawLine.substringAfter("#EXTINF:").substringAfter(',').substringAfter(" - ")
 
-        runCatching {
-            context.applicationContext.contentResolver.openInputStream(uri)?.use { stream ->
-                val lines = stream.readLines()
-                if (lines.first().startsWith("#EXTM3U")) {
-                    lines.forEachIndexed { index, rawLine ->
-                        if (rawLine.startsWith("#EXTINF:")) {
-                            // maybe later write this to be more efficient
-                            val artists =
-                                rawLine.substringAfter("#EXTINF:").substringAfter(',').substringBefore(" - ").split(';')
-                            val title = rawLine.substringAfter("#EXTINF:").substringAfter(',').substringAfter(" - ")
+                                                            val mockSong = Song(
+                                                                    song = SongEntity(
+                                                                            id = "",
+                                                                            title = title,
+                                                                            isLocal = false,
+                                                                            localPath = if (index + 1 < lines.size) lines[index + 1] else ""
+                                                                                ),
+                                                                    artists = artists.map { ArtistEntity("", it) },
+                                                                )
+                                                            songs.add(mockSong)
 
-                            val mockSong = Song(
-                                song = SongEntity(
-                                    id = "",
-                                    title = title,
-                                    isLocal = true,
-                                    localPath = if (index + 1 < lines.size) lines[index + 1] else ""
-                                ),
-                                artists = artists.map { ArtistEntity("", it) },
-                            )
-
-                            // now find the best match
-                            val matches = database.searchSongs(title)
-                            val oldSize = songs.size
-                            runBlocking {
-                                matches.first().forEach {
-                                    if (compareSong(mockSong, it, matchStrength = matchStrength)) {
-                                        songs.add(it)
+                                                            }
+                                                    }
+                                            }
                                     }
-                                }
                             }
 
-                            if (oldSize == songs.size) {
-                                rejectedSongs.add(rawLine)
-                            }
+                    if (songs.isEmpty()) {
+                            Toast.makeText(
+                                    context,
+                                    "No songs found. Invalid file, or perhaps no song matches were found.",
+                                    Toast.LENGTH_SHORT
+                                        ).show()
                         }
-                    }
+                    return songs
                 }
-            }
-        }.onFailure {
-            reportException(it)
-            Toast.makeText(context, R.string.m3u_import_playlist_failed, Toast.LENGTH_SHORT).show()
-        }
-
-        if (songs.isEmpty()) {
-            Toast.makeText(
-                context,
-                "No songs found. Invalid file, or perhaps no song matches were found.",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-        return Triple(songs, rejectedSongs, uri.path?.substringAfterLast('/')?.substringBeforeLast('.') ?: "")
-    }
-    fun loadM3UOnline(
-        context: Context,
-        uri: Uri,
-    ): ArrayList<Song> {
-        val songs = ArrayList<Song>()
-
-        runCatching {
-            context.applicationContext.contentResolver.openInputStream(uri)?.use { stream ->
-                val lines = stream.readLines()
-                if (lines.first().startsWith("#EXTM3U")) {
-                    lines.forEachIndexed { index, rawLine ->
-                        if (rawLine.startsWith("#EXTINF:")) {
-                            // maybe later write this to be more efficient
-                            val artists =
-                                rawLine.substringAfter("#EXTINF:").substringAfter(',').substringBefore(" - ").split(';')
-                            val title = rawLine.substringAfter("#EXTINF:").substringAfter(',').substringAfter(" - ")
-
-                            val mockSong = Song(
-                                song = SongEntity(
-                                    id = "",
-                                    title = title,
-                                    isLocal = false,
-                                    localPath = if (index + 1 < lines.size) lines[index + 1] else ""
-                                ),
-                                artists = artists.map { ArtistEntity("", it) },
-                            )
-                            songs.add(mockSong)
-
-                            }
-                        }
-                    }
-                }
-            }
-
-        if (songs.isEmpty()) {
-            Toast.makeText(
-                context,
-                "No songs found. Invalid file, or perhaps no song matches were found.",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-        return songs
-    }
-    /**
-     * Read a file to a string
-     */
-    private fun InputStream.readLines(): List<String> {
-        return this.bufferedReader().useLines { it.toList() }
-    }
 
 
     companion object {

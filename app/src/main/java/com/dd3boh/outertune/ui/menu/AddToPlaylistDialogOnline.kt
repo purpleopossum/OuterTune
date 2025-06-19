@@ -1,5 +1,6 @@
 package com.dd3boh.outertune.ui.menu
 
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.padding
@@ -47,7 +48,6 @@ import com.zionhuang.innertube.models.SongItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 
@@ -147,8 +147,7 @@ fun AddToPlaylistDialogOnline(
                                                     try {
                                                         database.insert(firstSongMedia)
                                                     } catch (e: Exception) {
-                                                        Timber.tag("Exception inserting song in database:")
-                                                            .e(e.toString())
+
                                                     }
                                                     database.addSongToPlaylist(playlist, ids)
                                                 }
@@ -160,13 +159,13 @@ fun AddToPlaylistDialogOnline(
                                                 songsIdx += 1
                                             }
 
-                                            if (songsIdx.toInt() == songsTot.toInt() - 1) {
-                                                onProgressStart(false)
-                                            }
-                                            onPercentageChange(((songsIdx / songsTot) * 100).toInt())
+                                        if (songsIdx.toInt() == songsTot.toInt() - 1) {
+                                            onProgressStart(false)
+                                        }
+                                        onPercentageChange(((songsIdx / songsTot) * 100).toInt())
 
                                     } catch (e: Exception){
-                                        Timber.tag("ERROR").v(e.toString())
+
                                     }
 
                                 }
@@ -212,8 +211,7 @@ fun AddToPlaylistDialogOnline(
                                                             update(firstSongEnt.toggleLike())
                                                         }
                                                     } catch (e: Exception) {
-                                                        Timber.tag("Exception inserting song in database:")
-                                                            .e(e.toString())
+
                                                     }
                                                 }
                                                 viewStateMap.clear()
@@ -230,7 +228,7 @@ fun AddToPlaylistDialogOnline(
                                         onPercentageChange(((songsIdx / songsTot) * 100).toInt())
 
                                     } catch (e: Exception){
-                                        Timber.tag("ERROR").v(e.toString())
+
                                     }
 
                                 }
@@ -324,7 +322,7 @@ fun AddToPlaylistDialogOnline(
                 },
                 textAlign = TextAlign.Start,
                 modifier = Modifier.align(Alignment.Start)
-                )
-            }
+            )
         }
+    }
 }

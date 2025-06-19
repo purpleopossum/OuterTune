@@ -9,6 +9,7 @@
 
 package com.dd3boh.outertune.ui.component
 
+import android.content.ClipData
 import android.text.format.Formatter
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -34,9 +35,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Info
-import androidx.compose.material.icons.rounded.Minimize
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
@@ -62,11 +61,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.ClipboardManager
+import androidx.compose.ui.platform.Clipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -86,6 +87,7 @@ fun DefaultDialog(
     icon: (@Composable () -> Unit)? = null,
     title: (@Composable () -> Unit)? = null,
     buttons: (@Composable RowScope.() -> Unit)? = null,
+    horizontalAlignment: Alignment.Horizontal = Alignment.CenterHorizontally,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Dialog(
@@ -99,7 +101,7 @@ fun DefaultDialog(
             tonalElevation = AlertDialogDefaults.TonalElevation
         ) {
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
+                horizontalAlignment = horizontalAlignment,
                 modifier = modifier
                     .padding(24.dp)
             ) {
@@ -187,6 +189,7 @@ fun TextFieldDialog(
     singleLine: Boolean = true,
     maxLines: Int = if (singleLine) 1 else 10,
     isInputValid: (String) -> Boolean = { it.isNotEmpty() },
+    keyboardType: KeyboardType = KeyboardType.Text,
     onDone: (String) -> Unit,
     onDismiss: () -> Unit,
     extraContent: (@Composable () -> Unit)? = null,
@@ -232,7 +235,10 @@ fun TextFieldDialog(
             singleLine = singleLine,
             maxLines = maxLines,
             colors = OutlinedTextFieldDefaults.colors(),
-            keyboardOptions = KeyboardOptions(imeAction = if (singleLine) ImeAction.Done else ImeAction.None),
+            keyboardOptions = KeyboardOptions(
+                imeAction = if (singleLine) ImeAction.Done else ImeAction.None,
+                keyboardType = keyboardType
+            ),
             keyboardActions = KeyboardActions(
                 onDone = {
                     onDone(textFieldValue.text)
@@ -305,7 +311,7 @@ fun ActionPromptDialog(
                 horizontalArrangement = Arrangement.End,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                if (onReset != null)
+                if (onReset != null) {
                     Row(modifier = Modifier.weight(1f)) {
                         TextButton(
                             onClick = { onReset() },
@@ -313,19 +319,21 @@ fun ActionPromptDialog(
                             Text(stringResource(R.string.reset))
                         }
                     }
+                }
+
+                if (onCancel != null) {
+                    TextButton(
+                        onClick = { onCancel() }
+                    ) {
+                        Text(stringResource(android.R.string.cancel))
+                    }
+                }
 
                 TextButton(
                     onClick = { onConfirm() }
                 ) {
                     Text(stringResource(android.R.string.ok))
                 }
-
-                if (onCancel != null)
-                    TextButton(
-                        onClick = { onCancel() }
-                    ) {
-                        Text(stringResource(android.R.string.cancel))
-                    }
             }
         }
     }
@@ -385,15 +393,15 @@ fun CounterDialog(
                     IconButton(
                         onClick = {
                             if (tempValue.intValue < upperBound) {
-                                tempValue.value += 1
+                                tempValue.intValue += 1
                             }
                         },
                         onLongClick = {}
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Add,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.secondary
+                        Text(
+                            text = "+",
+//                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge
                         )
                     }
 
@@ -401,15 +409,15 @@ fun CounterDialog(
                     IconButton(
                         onClick = {
                             if (tempValue.intValue > lowerBound) {
-                                tempValue.value -= 1
+                                tempValue.intValue -= 1
                             }
                         },
                         onLongClick = {}
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Minimize,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.secondary
+                        Text(
+                            text = "—",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleLarge
                         )
                     }
                 }
@@ -470,7 +478,7 @@ fun DetailsDialog(
     currentFormat: FormatEntity?,
     currentPlayCount: Int?,
     volume: Float,
-    clipboardManager: ClipboardManager,
+    clipboardManager: Clipboard,
     setVisibility: (newState: Boolean) -> Unit,
 ) {
     val context = LocalContext.current
@@ -553,7 +561,8 @@ fun DetailsDialog(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
                             onClick = {
-                                clipboardManager.setText(AnnotatedString(displayText))
+                                val clipData = ClipData.newPlainText(label, AnnotatedString(displayText))
+                                clipboardManager.nativeClipboard.setPrimaryClip(clipData)
                                 Toast.makeText(context, R.string.copied, Toast.LENGTH_SHORT).show()
                             }
                         )
@@ -569,10 +578,11 @@ fun DetailsDialog(
 
 @Composable
 fun InfoLabel(
-    text: String
+    text: String,
+    modifier: Modifier = Modifier
 ) = Row(
     verticalAlignment = Alignment.CenterVertically,
-    modifier = Modifier.padding(horizontal = 8.dp)
+    modifier = modifier.padding(horizontal = 8.dp)
 ) {
     Icon(
         Icons.Outlined.Info,

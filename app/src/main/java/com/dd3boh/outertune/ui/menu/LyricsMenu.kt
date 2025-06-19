@@ -26,6 +26,7 @@ import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.ExpandLess
 import androidx.compose.material.icons.rounded.ExpandMore
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material.icons.rounded.Sync
 import androidx.compose.material.icons.rounded.SyncAlt
 import androidx.compose.material3.CircularProgressIndicator
@@ -60,7 +61,12 @@ import com.dd3boh.outertune.ui.component.DefaultDialog
 import com.dd3boh.outertune.ui.component.GridMenu
 import com.dd3boh.outertune.ui.component.GridMenuItem
 import com.dd3boh.outertune.ui.component.ListDialog
+import com.dd3boh.outertune.ui.component.PreferenceGroupTitle
+import com.dd3boh.outertune.ui.component.SettingsClickToReveal
 import com.dd3boh.outertune.ui.component.TextFieldDialog
+import com.dd3boh.outertune.ui.screens.settings.fragments.LyricFormatFrag
+import com.dd3boh.outertune.ui.screens.settings.fragments.LyricParserFrag
+import com.dd3boh.outertune.ui.screens.settings.fragments.LyricSourceFrag
 import com.dd3boh.outertune.viewmodels.LyricsMenuViewModel
 
 
@@ -331,6 +337,53 @@ fun LyricsMenu(
         )
     }
 
+    var showSettings by remember {
+        mutableStateOf(false)
+    }
+    if (showSettings) {
+        DefaultDialog(
+            onDismiss = { showSettings = false },
+            content = {
+                Column(
+                    modifier = Modifier
+                        .weight(1f, false)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(horizontal = 18.dp)
+                    )
+                    PreferenceGroupTitle(
+                        title = stringResource(R.string.grp_lyrics_format)
+                    )
+                    LyricFormatFrag()
+
+                    SettingsClickToReveal(stringResource(R.string.more_settings)) {
+                        PreferenceGroupTitle(
+                            title = stringResource(R.string.grp_lyrics_source)
+                        )
+                        LyricSourceFrag()
+
+                        PreferenceGroupTitle(
+                            title = stringResource(R.string.grp_lyrics_parser)
+                        )
+                        LyricParserFrag()
+                    }
+                }
+            },
+            buttons = {
+                TextButton(
+                    onClick = {
+                        showSettings = false
+                    }
+                ) {
+                    Text(text = stringResource(android.R.string.ok))
+                }
+            }
+        )
+    }
+
     GridMenu(
         contentPadding = PaddingValues(
             start = 8.dp,
@@ -341,7 +394,8 @@ fun LyricsMenu(
     ) {
         GridMenuItem(
             icon = Icons.Rounded.Edit,
-            title = R.string.edit
+            title = R.string.edit,
+            enabled = !mediaMetadataProvider().isLocal
         ) {
             showEditDialog = true
         }
@@ -350,7 +404,7 @@ fun LyricsMenu(
             title = R.string.refetch
         ) {
             onDismiss()
-            viewModel.refetchLyrics(mediaMetadataProvider(), lyricsProvider())
+            viewModel.refetchLyrics(mediaMetadataProvider())
         }
         GridMenuItem(
             icon = Icons.Rounded.Search,
@@ -366,6 +420,13 @@ fun LyricsMenu(
             ) {
                 showDeleteLyric = true
             }
+        }
+
+        GridMenuItem(
+            icon = Icons.Rounded.Settings,
+            title = R.string.settings,
+        ) {
+            showSettings = true
         }
     }
 }

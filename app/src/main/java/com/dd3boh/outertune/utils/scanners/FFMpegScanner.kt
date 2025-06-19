@@ -8,11 +8,7 @@
 
 package com.dd3boh.outertune.utils.scanners
 
-import android.app.Activity
-import android.content.ActivityNotFoundException
-import android.content.Context
-import android.content.Intent
-import com.dd3boh.outertune.MainActivity
+import android.util.Log
 import com.dd3boh.outertune.db.entities.AlbumEntity
 import com.dd3boh.outertune.db.entities.ArtistEntity
 import com.dd3boh.outertune.db.entities.FormatEntity
@@ -21,17 +17,14 @@ import com.dd3boh.outertune.db.entities.Song
 import com.dd3boh.outertune.db.entities.SongEntity
 import com.dd3boh.outertune.models.SongTempData
 import com.dd3boh.outertune.ui.utils.ARTIST_SEPARATORS
-import com.dd3boh.outertune.ui.utils.DEBUG_SAVE_OUTPUT
-import com.dd3boh.outertune.ui.utils.EXTRACTOR_DEBUG
+import com.dd3boh.outertune.constants.DEBUG_SAVE_OUTPUT
+import com.dd3boh.outertune.constants.EXTRACTOR_DEBUG
+import com.dd3boh.outertune.models.MediaMetadata
 import com.dd3boh.outertune.ui.utils.EXTRACTOR_TAG
-import com.dd3boh.outertune.utils.reportException
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.sync.Mutex
-import timber.log.Timber
+import wah.mikooomich.ffMetadataEx.AudioMetadata
+import wah.mikooomich.ffMetadataEx.FFMpegWrapper
 import java.io.File
 import java.lang.Integer.parseInt
-import java.lang.Long.parseLong
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -40,8 +33,18 @@ import kotlin.math.roundToLong
 
 const val toSeconds = 1000 * 60 * 16.7 // convert FFmpeg duration to seconds
 
-class FFMpegScanner(context: Context) : MetadataScanner {
-    val ctx = context
+class FFMpegScanner() : MetadataScanner {
+    // load advanced scanner libs
+    init {
+//        System.loadLibrary("avcodec")
+//        System.loadLibrary("avdevice")
+//        System.loadLibrary("avfilter")
+//        System.loadLibrary("avformat")
+//        System.loadLibrary("avutil")
+//        System.loadLibrary("swresample")
+//        System.loadLibrary("swscale")
+        System.loadLibrary("ffmetaexjni")
+    }
 
     /**
      * Given a path to a file, extract all necessary metadata
@@ -50,82 +53,84 @@ class FFMpegScanner(context: Context) : MetadataScanner {
      */
     override fun getAllMetadataFromPath(path: String): SongTempData {
         if (EXTRACTOR_DEBUG)
-            Timber.tag(EXTRACTOR_TAG).d("Starting Full Extractor session on: $path")
+            Log.v(EXTRACTOR_TAG, "Starting Full Extractor session on: $path")
 
-        var data: String = ""
-        val mutex = Mutex(true)
-        val intent = Intent("wah.mikooomich.ffMetadataEx.ACTION_EXTRACT_METADATA").apply {
-            putExtra("filePath", path)
+        val ffmpeg = FFMpegWrapper()
+        val data: AudioMetadata? = ffmpeg.getFullAudioMetadata(path)
+
+        if (data == null) {
+            Log.e(EXTRACTOR_TAG, "Fatal extraction error")
+            throw RuntimeException("Fatal FFmpeg scanner extraction error")
         }
-
-        try {
-            (ctx as MainActivity).activityLauncher.launchActivityForResult(intent) { result ->
-                if (result.resultCode == Activity.RESULT_OK) {
-                    val metadata = result.data?.getStringExtra("rawExtractorData")
-                    if (metadata != null) {
-                        data = metadata
-                        mutex.unlock()
-                    } else {
-                        data = "No metadata received"
-                    }
-                } else {
-                    data = "Metadata extraction failed"
-                }
-            }
-        } catch (e: ActivityNotFoundException) {
-            throw ScannerCriticalFailureException("ffMetaDataEx extractor app not found: ${e.message}")
+        if (data.status != 0) {
+            throw RuntimeException("Fatal FFmpeg scanner extraction error. Status: ${data.status}")
         }
-
-        // wait until scanner finishes
-        runBlocking {
-            var delays = 0
-
-            // TODO: make this less cursed
-            while (mutex.isLocked) {
-                delay(100)
-                delays++
-                if (delays > 100) {
-                    reportException(Exception("Took too long to extract metadata from ffMetadataEx. Bailing. $path"))
-                    mutex.unlock()
-                }
-            }
-        }
-
         if (EXTRACTOR_DEBUG && DEBUG_SAVE_OUTPUT) {
-            Timber.tag(EXTRACTOR_TAG).d("Full output for: $path \n $data")
+            Log.v(EXTRACTOR_TAG, "Full output for: $path \n $data")
         }
 
         val songId = SongEntity.generateSongId()
-        var rawTitle: String? = null
-        var artists: String? = null
-        var albumName: String? = null
-        var genres: String? = null
+        var rawTitle: String? = data.title
+        var rawArtists: String? = data.artist
+        var albumName: String? = data.album
+        var genres: String? = data.genre
         var rawDate: String? = null
-        var codec: String? = null
-        var type: String? = null
-        var bitrate: String? = null
-        var sampleRate: String? = null
-        var channels: String? = null
-        var rawDuration: String? = null
-        var replayGain: Double? = null
+        var codec: String? = data.codec
+        var type: String? = data.codecType
+        var bitrate: Long = data.bitrate
+        var sampleRate: Int = data.sampleRate
+        var channels: Int = data.channels
+        var duration: Long = (data.duration / toSeconds).roundToLong()
 
-        // read data from FFmpeg
-        data.lines().forEach {
-            val tag = it.substringBefore(':')
+        var artistList: MutableList<ArtistEntity> = ArrayList<ArtistEntity>()
+        var genresList: MutableList<GenreEntity> = ArrayList<GenreEntity>()
+
+        // read extra data from FFmpeg
+        // album, artist, genre, title all have their own fields, but it is not detected for all songs. We use the
+        // extra values to supplement those.
+        data.extrasRaw.forEach {
+            val tag = it.substringBefore(':').trim()
             when (tag) {
                 // why the fsck does an error here get swallowed silently????
-                "ARTISTS", "ARTIST", "artist" -> artists = it.substringAfter(':')
-                "ALBUM", "album" -> albumName = it.substringAfter(':')
-                "TITLE", "title" -> rawTitle = it.substringAfter(':')
-//                "replaygain" -> replayGain = it.substringAfter(':')
-                "GENRE", "genre" -> genres = it.substringAfter(':')
-                "DATE", "date" -> rawDate = it.substringAfter(':')
-                "codec" -> codec = it.substringAfter(':')
-                "type" -> type = it.substringAfter(':')
-                "bitrate" -> bitrate = it.substringAfter(':')
-                "sampleRate" -> sampleRate = it.substringAfter(':')
-                "channels" -> channels = it.substringAfter(':')
-                "duration" -> rawDuration = it.substringAfter(':')
+                "ALBUM", "album" -> {
+                    if (albumName == null) {
+                        albumName = it.substringAfter(':').trim()
+                    }
+                }
+
+                "ARTISTS", "ARTIST", "artist" -> {
+                    val splitArtists = it.split(ARTIST_SEPARATORS)
+                    splitArtists.forEach { artistVal ->
+                        artistList.add(
+                            ArtistEntity(
+                                ArtistEntity.generateArtistId(),
+                                artistVal.substringAfter(':').trim(),
+                                isLocal = true
+                            )
+                        )
+                    }
+                }
+
+                "DATE", "date" -> rawDate = it.substringAfter(':').trim()
+                "GENRE", "genre" -> {
+                    val splitGenres = it.split(ARTIST_SEPARATORS)
+                    splitGenres.forEach { genreVal ->
+                        genresList.add(
+                            GenreEntity(
+                                GenreEntity.generateGenreId(),
+                                genreVal.substringAfter(':').trim(),
+                                isLocal = true
+                            )
+                        )
+                    }
+                }
+
+                "TITLE", "title" -> {
+                    if (rawTitle == null) {
+                        rawTitle = it.substringAfter(':').trim()
+                    }
+                }
+
                 else -> ""
             }
         }
@@ -135,24 +140,19 @@ class FFMpegScanner(context: Context) : MetadataScanner {
          * These vars need a bit more parsing
          */
 
-        val title: String = if (rawTitle != null && rawTitle?.isBlank() == false) { // songs with no title tag
-            rawTitle!!.trim()
-        } else {
-            path.substringAfterLast('/').substringBeforeLast('.')
-        }
-
-        val duration: Long = try {
-            (parseLong(rawDuration?.trim()) / toSeconds).roundToLong() // just let it crash
-        } catch (e: Exception) {
-//            e.printStackTrace()
-            -1L
-        }
+        val title: String =
+            if (rawTitle != null && rawTitle.isBlank() == false) { // songs with no title tag
+                rawTitle.trim()
+            } else {
+                path.substringAfterLast('/').substringBeforeLast('.')
+            }
 
         // should never be invalid if scanner even gets here fine...
-        val dateModified = LocalDateTime.ofInstant(Instant.ofEpochMilli(File(path).lastModified()), ZoneOffset.UTC)
+        val dateModified =
+            LocalDateTime.ofInstant(Instant.ofEpochMilli(File(path).lastModified()), ZoneOffset.UTC)
         val albumId = if (albumName != null) AlbumEntity.generateAlbumId() else null
         val mime = if (type != null && codec != null) {
-            "${type?.trim()}/${codec?.trim()}"
+            "${type.trim()}/${codec.trim()}"
         } else {
             "Unknown"
         }
@@ -161,21 +161,20 @@ class FFMpegScanner(context: Context) : MetadataScanner {
          * Parse the more complicated structures
          */
 
-        val artistList = ArrayList<ArtistEntity>()
-        val genresList = ArrayList<GenreEntity>()
         var year: Int? = null
         var date: LocalDateTime? = null
 
         // parse album
         val albumEntity = if (albumName != null && albumId != null) AlbumEntity(
             id = albumId,
-            title = albumName!!,
+            title = albumName,
             songCount = 1,
-            duration = duration.toInt()
+            duration = duration.toInt(),
+            isLocal = true
         ) else null
 
         // parse artist
-        artists?.split(ARTIST_SEPARATORS)?.forEach { element ->
+        rawArtists?.split(ARTIST_SEPARATORS)?.forEach { element ->
             val artistVal = element.trim()
             artistList.add(ArtistEntity(ArtistEntity.generateArtistId(), artistVal, isLocal = true))
         }
@@ -190,16 +189,18 @@ class FFMpegScanner(context: Context) : MetadataScanner {
         try {
             if (rawDate != null) {
                 try {
-                    date = LocalDate.parse(rawDate!!.substringAfter(';').trim()).atStartOfDay()
+                    date = LocalDate.parse(rawDate.substringAfter(';').trim()).atStartOfDay()
                 } catch (e: Exception) {
                 }
 
-                year = date?.year ?: parseInt(rawDate!!.trim())
+                year = date?.year ?: parseInt(rawDate.trim())
             }
         } catch (e: Exception) {
             // user error at this point. I am not parsing all the weird ways the string can come in
         }
 
+        artistList = artistList.filterNot { it.name.isBlank() }.distinctBy { it.name }.toMutableList()
+        genresList = genresList.filterNot { it.title.isBlank() }.distinctBy { it.title }.toMutableList()
 
         return SongTempData(
             Song(
@@ -207,7 +208,7 @@ class FFMpegScanner(context: Context) : MetadataScanner {
                     id = songId,
                     title = title,
                     duration = duration.toInt(), // we use seconds for duration
-                    thumbnailUrl = path,
+                    thumbnailUrl = null,
                     albumId = albumId,
                     albumName = albumName,
                     year = year,
@@ -227,18 +228,17 @@ class FFMpegScanner(context: Context) : MetadataScanner {
                 itag = -1,
                 mimeType = mime,
                 codecs = codec?.trim() ?: "Unknown",
-                bitrate = bitrate?.let { parseInt(it.trim()) } ?: -1,
-                sampleRate = sampleRate?.let { parseInt(it.trim()) } ?: -1,
+                bitrate = bitrate.toInt(),
+                sampleRate = sampleRate,
                 contentLength = duration,
-                loudnessDb = replayGain,
+                loudnessDb = null,
                 playbackTrackingUrl = null
             )
         )
     }
 
     /**
-     * Given a path to a file, extract necessary metadata. For fields FFmpeg is
-     * unable to extract, use the provided FormatEntity data.
+     * Given a path to a file, extract necessary metadata.
      *
      * @param file Full file path
      */

@@ -70,7 +70,6 @@ object YTPlayerUtils {
     suspend fun playerResponseForPlayback(
         videoId: String,
         playlistId: String? = null,
-        playedFormat: FormatEntity?,
         audioQuality: AudioQuality,
         connectivityManager: ConnectivityManager,
     ): Result<PlaybackData> = runCatching {
@@ -124,10 +123,12 @@ object YTPlayerUtils {
             // decide which client to use for streams and load its player response
             val client: YouTubeClient
             if (clientIndex == -1) {
+                Log.d(TAG, "Trying client: ${MAIN_CLIENT.clientName}")
                 // try with streams from main client first
                 client = MAIN_CLIENT
                 streamPlayerResponse = mainPlayerResponse
             } else {
+                Log.d(TAG, "Trying fallback client: ${STREAM_FALLBACK_CLIENTS[clientIndex].clientName}")
                 // after main client use fallback clients
                 client = STREAM_FALLBACK_CLIENTS[clientIndex]
 
@@ -151,7 +152,6 @@ object YTPlayerUtils {
                 format =
                     findFormat(
                         streamPlayerResponse,
-                        playedFormat,
                         audioQuality,
                         connectivityManager,
                     ) ?: continue
@@ -169,9 +169,10 @@ object YTPlayerUtils {
                 }
                 if (validateStatus(streamUrl)) {
                     // working stream found
+                    Log.i(TAG, "[$videoId] [${client.clientName}] found working stream")
                     break
                 } else {
-                    Log.d(TAG, "[$videoId] [${client.clientName}] got bad http status code")
+                    Log.w(TAG, "[$videoId] [${client.clientName}] got bad http status code")
                 }
             }
         }
@@ -220,23 +221,18 @@ object YTPlayerUtils {
 
     private fun findFormat(
         playerResponse: PlayerResponse,
-        playedFormat: FormatEntity?,
         audioQuality: AudioQuality,
         connectivityManager: ConnectivityManager,
     ): PlayerResponse.StreamingData.Format? =
-        if (playedFormat != null) {
-            playerResponse.streamingData?.adaptiveFormats?.find { it.itag == playedFormat.itag }
-        } else {
-            playerResponse.streamingData?.adaptiveFormats
-                ?.filter { it.isAudio }
-                ?.maxByOrNull {
-                    it.bitrate * when (audioQuality) {
-                        AudioQuality.AUTO -> if (connectivityManager.isActiveNetworkMetered) -1 else 1
-                        AudioQuality.HIGH -> 1
-                        AudioQuality.LOW -> -1
-                    } + (if (it.mimeType.startsWith("audio/webm")) 10240 else 0) // prefer opus stream
-                }
-        }
+        playerResponse.streamingData?.adaptiveFormats
+            ?.filter { it.isAudio }
+            ?.maxByOrNull {
+                it.bitrate * when (audioQuality) {
+                    AudioQuality.AUTO -> if (connectivityManager.isActiveNetworkMetered) -1 else 1
+                    AudioQuality.HIGH -> 1
+                    AudioQuality.LOW -> -1
+                } + (if (it.mimeType.startsWith("audio/webm")) 10240 else 0) // prefer opus stream
+            }
 
     /**
      * Checks if the stream url returns a successful status.
