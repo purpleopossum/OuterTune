@@ -3,7 +3,11 @@ package com.dd3boh.outertune.playback
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.widget.Toast
+import android.widget.Toast.LENGTH_LONG
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import androidx.media3.common.PlaybackException
@@ -173,7 +177,10 @@ class DownloadUtil @Inject constructor(
 
                     downloadMgr.enqueue(id, streamUrl, displayName = title)
                 } catch (e: PlaybackException) {
-                    Log.w(TAG, "Could not download Song: " + id + e.toString())
+                    Log.w(TAG, "Could not download Song: $title :$e")
+                    Handler(Looper.getMainLooper()).post() {
+                        Toast.makeText(context, "YTDLErr: $title : ${e.toString()}", LENGTH_LONG).show()
+                    }
                     database.updateDownloadStatus(id, null)
                 }
             }
