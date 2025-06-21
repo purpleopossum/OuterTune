@@ -3,9 +3,14 @@ package com.dd3boh.outertune.playback
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.widget.Toast
+import android.widget.Toast.LENGTH_LONG
 import androidx.core.content.getSystemService
 import androidx.core.net.toUri
+import androidx.media3.common.PlaybackException
 import androidx.media3.database.DatabaseProvider
 import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.datasource.cache.CacheDataSource
@@ -138,38 +143,46 @@ class DownloadUtil @Inject constructor(
                     return@launch
                 }
 
-                val playbackData = runBlocking(Dispatchers.IO) {
-                    YTPlayerUtils.playerResponseForPlayback(
-                        id,
-                        audioQuality = audioQuality,
-                        connectivityManager = connectivityManager,
-                    )
-                }.getOrThrow()
-                val format = playbackData.format
-                database.query {
-                    upsert(
-                        FormatEntity(
-                            id = id,
-                            itag = format.itag,
-                            mimeType = format.mimeType.split(";")[0],
-                            codecs = format.mimeType.split("codecs=")[1].removeSurrounding("\""),
-                            bitrate = format.bitrate,
-                            sampleRate = format.audioSampleRate,
-                            contentLength = format.contentLength!!,
-                            loudnessDb = playbackData.audioConfig?.loudnessDb,
-                            playbackTrackingUrl = playbackData.playbackTracking?.videostatsPlaybackUrl?.baseUrl
+                try {
+                    val playbackData = runBlocking(Dispatchers.IO) {
+                        YTPlayerUtils.playerResponseForPlayback(
+                            id,
+                            audioQuality = audioQuality,
+                            connectivityManager = connectivityManager,
                         )
-                    )
-                }
-                val streamUrl = playbackData.streamUrl.let {
-                    // Specify range to avoid YouTube's throttling
-                    "${it}&range=0-${format.contentLength ?: 10000000}"
-                }
+                    }.getOrThrow()
+                    val format = playbackData.format
+                    database.query {
+                        upsert(
+                            FormatEntity(
+                                id = id,
+                                itag = format.itag,
+                                mimeType = format.mimeType.split(";")[0],
+                                codecs = format.mimeType.split("codecs=")[1].removeSurrounding("\""),
+                                bitrate = format.bitrate,
+                                sampleRate = format.audioSampleRate,
+                                contentLength = format.contentLength!!,
+                                loudnessDb = playbackData.audioConfig?.loudnessDb,
+                                playbackTrackingUrl = playbackData.playbackTracking?.videostatsPlaybackUrl?.baseUrl
+                            )
+                        )
+                    }
+                    val streamUrl = playbackData.streamUrl.let {
+                        // Specify range to avoid YouTube's throttling
+                        "${it}&range=0-${format.contentLength ?: 10000000}"
+                    }
 
-                songUrlCache[id] =
-                    streamUrl to System.currentTimeMillis() + (playbackData.streamExpiresInSeconds * 1000L)
+                    songUrlCache[id] =
+                        streamUrl to System.currentTimeMillis() + (playbackData.streamExpiresInSeconds * 1000L)
 
-                downloadMgr.enqueue(id, streamUrl, displayName = title)
+                    downloadMgr.enqueue(id, streamUrl, displayName = title)
+                } catch (e: PlaybackException) {
+                    Log.w(TAG, "Could not download Song: $title :$e")
+                    Handler(Looper.getMainLooper()).post() {
+                        Toast.makeText(context, "YTDLErr: $title : ${e.toString()}", LENGTH_LONG).show()
+                    }
+                    database.updateDownloadStatus(id, null)
+                }
             }
         }
 
